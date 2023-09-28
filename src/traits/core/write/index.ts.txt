@@ -1,0 +1,2 @@
+export * from './file-system.write.function-definition';
+export * from './file-system.write.trait';
