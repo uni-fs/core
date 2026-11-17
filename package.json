@@ -11,7 +11,19 @@
   "license": "MIT",
   "access": "public",
   "dependencies": {
-    "@lirx/core": "^1.0.0",
-    "@lifaon/path": "^2.1.0"
-  }
+    "@lifaon/path": "latest",
+    "@lirx/async-task": "latest",
+    "@lirx/core": "latest",
+    "@lirx/utils": "latest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11"
+  },
+  "localDependencies": [
+    "@lirx/core",
+    "@lirx/utils",
+    "@lirx/async-task",
+    "@lifaon/path"
+  ],
+  "packageManager": "yarn@4.0.2"
 }

@@ -1,5 +1,0 @@
-export * from './copy/index';
-export * from './create/index';
-export * from './file-system.extended.file.trait-collection';
-export * from './size/index';
-export * from './truncate/index';

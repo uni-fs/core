@@ -1,0 +1,89 @@
+import { parseURI } from '../uri/parse-uri';
+import { IURI } from '../uri/uri.type';
+
+export interface ISchemeResolverEntryConstructor<GEntry> {
+  new(
+    uri: string,
+  ): GEntry
+}
+
+export interface ISchemeResolverEntryFunction<GEntry> {
+  (
+    uri: string,
+  ): GEntry
+}
+
+export type ISchemeResolverEntryBuilder<GEntry> =
+  | ISchemeResolverEntryConstructor<GEntry>
+  | ISchemeResolverEntryFunction<GEntry>
+;
+
+
+export type ISchemeResolverEntry<GEntry> = readonly [
+  scheme: string,
+  builder: ISchemeResolverEntryBuilder<GEntry>,
+];
+
+export class SchemeResolver<GEntry> {
+  readonly #map: ReadonlyMap<string,ISchemeResolverEntryBuilder<GEntry>>;
+
+  constructor(
+    entries: Iterable<ISchemeResolverEntry<GEntry>>,
+  ) {
+    this.#map = new Map<string,ISchemeResolverEntryBuilder<GEntry>>(
+      entries,
+    );
+  }
+
+  resolve(
+    uri: string,
+  ): GEntry {
+    const parsedURI: IURI = parseURI(uri);
+    const builder: ISchemeResolverEntryBuilder<GEntry> | undefined = this.#map.get(parsedURI.scheme);
+    if (builder === void 0) {
+      throw new Error(`Unable to find a resolver satisfying the scheme "${parsedURI.scheme}"`);
+    } else {
+      try {
+        return (builder as ISchemeResolverEntryFunction<GEntry>)(uri);
+      } catch {
+        return new (builder as ISchemeResolverEntryConstructor<GEntry>)(uri);
+
+      }
+    }
+  }
+}
+
+
+/*-----------*/
+
+// export class FileSystemResolver<GEntry> {
+//   readonly #map: ReadonlyMap<string,ISchemeResolverEntryBuilder<GEntry>>;
+//
+//   constructor(
+//     entries: Iterable<ISchemeResolverEntry<GEntry>>,
+//   ) {
+//     this.#map = new Map<string,ISchemeResolverEntryBuilder<GEntry>>(
+//       entries,
+//     );
+//   }
+//
+//   resolve(
+//     uri: string,
+//   ): GEntry {
+//     const parsedURI: IURI = parseURI(uri);
+//     const builder: ISchemeResolverEntryBuilder<GEntry> | undefined = this.#map.get(parsedURI.scheme);
+//     if (builder === void 0) {
+//       throw new Error(`Unable to find a resolver satisfying the scheme "${parsedURI.scheme}"`);
+//     } else {
+//       try {
+//         return (builder as ISchemeResolverEntryFunction<GEntry>)(uri);
+//       } catch {
+//         return new (builder as ISchemeResolverEntryConstructor<GEntry>)(uri);
+//
+//       }
+//     }
+//   }
+// }
+
+
+

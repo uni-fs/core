@@ -1,3 +1,0 @@
-export * from './file-system.get-protocols.config';
-export * from './file-system.get-protocols.function-definition';
-export * from './file-system.get-protocols.trait';

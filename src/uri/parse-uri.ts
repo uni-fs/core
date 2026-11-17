@@ -1,0 +1,75 @@
+import { IURI, IURIAuthority } from './uri.type';
+
+const URI_SCHEME_REGEXP = new RegExp('^([a-zA-Z](?:[a-zA-Z0-9\\+\\-\\.])*):', 'g');
+
+// https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+// https://github.com/Kikobeats/parse-uri/blob/master/src/index.js
+
+export function parseURI(
+  input: string,
+): IURI {
+  URI_SCHEME_REGEXP.lastIndex = 0;
+  const match: RegExpExecArray | null = URI_SCHEME_REGEXP.exec(input);
+
+  if (match === null) {
+    throw new Error(`Invalid scheme.`);
+  } else {
+    const scheme = match[1];
+
+    const rest: string = input.slice(match[0].length);
+    const hasAuthority: boolean = rest.startsWith('//');
+
+    const url: URL = new URL(
+      (hasAuthority && !rest.startsWith('///'))
+        ? `http:${rest}`
+        : input,
+    );
+
+    let authority: IURIAuthority | undefined = void 0;
+
+    if (hasAuthority) {
+      const userinfo = (url.username === '')
+        ? void 0
+        : `${url.username}${(url.password === '') ? '' : `:${url.password}`}`;
+      const host = url.hostname;
+      const port = (url.username === '')
+        ? void 0
+        : Number(url.port);
+
+      authority = {
+        userinfo,
+        host,
+        port,
+      };
+    }
+
+    const queryString: string = url.search.slice(1);
+    const fragmentString: string = url.hash.slice(1);
+
+    const path = url.pathname;
+
+    const query = (queryString === '')
+      ? void 0
+      : queryString;
+
+    const fragment = (fragmentString === '')
+      ? void 0
+      : fragmentString;
+
+    return {
+      scheme,
+      authority,
+      path,
+      query,
+      fragment,
+    };
+  }
+}
+
+// export function parseURIAuthority(
+//   input: string, // must start with //
+// ): IURIAuthority {
+//
+// }
+
+

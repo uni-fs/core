@@ -1,0 +1,226 @@
+// https://github.com/Kikobeats/parse-uri/blob/master/src/index.js
+// https://medialize.github.io/URI.js/
+
+
+// const URI_SCHEME_REGEXP = new RegExp('^([a-zA-Z](?:[a-zA-Z0-9\\+\\-\\.])*):', 'g');
+const URI_SCHEME_REGEXP = new RegExp('^([a-zA-Z](?:[a-zA-Z0-9\\+\\-\\.])*)$', 'g');
+
+function dummyURL(): URL {
+  return new URL('https://abc.com');
+}
+
+export type SetURIComponentMode = 'strict' | 'loose';
+
+
+export class URI {
+  #scheme: string;
+  #authority: URIAuthority | undefined;
+
+  constructor() {
+  }
+
+  get scheme(): string {
+    return this.#scheme;
+  }
+
+  setScheme(
+    scheme: string,
+  ): this {
+    if (!URI_SCHEME_REGEXP.test(scheme)) {
+      throw new Error('Invalid scheme.');
+    }
+    this.#scheme = scheme;
+    return this;
+  }
+
+  get authority(): URIAuthority | undefined {
+    return this.#authority;
+  }
+
+  setAuthority(
+    authority: URIAuthority | undefined,
+  ): this {
+    this.#authority = authority;
+    return this;
+  }
+
+  updateAuthority(
+    update: (authority: URIAuthority | undefined) => URIAuthority | undefined,
+  ): this {
+    return this.setAuthority(update(this.#authority));
+  }
+}
+
+
+export interface IURIAuthorityOptions {
+  readonly username: string;
+  readonly password: string;
+}
+
+export class URIAuthority {
+  static parse(
+    input: string,
+    mode: SetURIComponentMode = 'loose',
+  ): URIAuthority {
+
+  }
+
+  #userinfo: string | undefined;
+  #userinfoNameAndPassword: URIUserinfoNameAndPassword | undefined; // computed
+  #host: string;
+  #port: number | undefined;
+
+  protected constructor(
+    {
+
+    }: IURIAuthorityOptions,
+  ) {
+  }
+
+  get userinfo(): string | undefined {
+    return this.#userinfo;
+  }
+
+  get userinfoAsNameAndPassword(): URIUserinfoNameAndPassword | undefined {
+    if (this.#userinfo === undefined) {
+      return undefined;
+    } else {
+      if (this.#userinfoNameAndPassword === undefined) {
+        this.#userinfoNameAndPassword = URIUserinfoNameAndPassword.parse(this.#userinfo);
+      }
+      return this.#userinfoNameAndPassword;
+    }
+  }
+
+  setUserinfo(
+    userinfo: string | URIUserinfoNameAndPassword | undefined,
+  ): this {
+    const url = dummyURL();
+    url.username = userinfo
+    this.#userinfo = userinfo;
+    return this;
+  }
+
+  toString(): string {
+    return ((this.#userinfo === undefined) ? '' : `${this.#userinfo}@`)
+      + this.#host
+      + ((this.#port === undefined) ? '' : `:${this.#port}`);
+  }
+}
+
+
+export interface IURIUserinfoNameAndPasswordOptions {
+  readonly username: string;
+  readonly password: string;
+}
+
+export class URIUserinfoNameAndPassword {
+  static parse(
+    input: string,
+    mode: SetURIComponentMode = 'loose',
+  ): URIUserinfoNameAndPassword {
+    const [username, password = ''] = input.split(':');
+
+    const url: URL = dummyURL();
+    url.username = username;
+    url.password = password;
+
+    if (mode === 'strict') {
+      if (username !== url.username) {
+        throw new Error('Invalid username.');
+      }
+
+      if (password !== url.password) {
+        throw new Error('Invalid password.');
+      }
+    }
+
+    return new URIUserinfoNameAndPassword({
+      username: url.username,
+      password: url.password,
+    });
+  }
+
+  #username: string;
+  #password: string;
+
+  protected constructor(
+    {
+      username,
+      password,
+    }: IURIUserinfoNameAndPasswordOptions,
+  ) {
+    this.#username = username;
+    this.#password = password;
+  }
+
+  /* USERNAME */
+
+  get username(): string {
+    return this.#username;
+  }
+
+  set username(
+    username: string,
+  ) {
+    this.setUsername(username)
+  }
+
+  get usernameDecoded(): string {
+    return decodeURIComponent(this.#username);
+  }
+
+  setUsername(
+    username: string,
+    mode: SetURIComponentMode = 'loose',
+  ): this {
+    const url: URL = dummyURL();
+    url.username = username;
+    if (mode === 'strict' && username !== url.username) {
+      throw new Error('Invalid username.');
+    }
+    this.#username = url.username;
+    return this;
+  }
+
+  /* PASSWORD */
+
+  get password(): string {
+    return this.#username;
+  }
+
+  set password(
+    password: string,
+  ) {
+    this.setPassword(password)
+  }
+
+  get passwordDecoded(): string {
+    return decodeURIComponent(this.#password);
+  }
+
+  setPassword(
+    password: string,
+    mode: SetURIComponentMode = 'loose',
+  ): this {
+    const url: URL = dummyURL();
+    url.password = password;
+    if (mode === 'strict' && password !== url.username) {
+      throw new Error('Invalid password.');
+    }
+    this.#password = url.password;
+    return this;
+  }
+
+  /* MISC */
+
+  isEmpty(): boolean {
+    return this.#username === '' && this.#password === '';
+  }
+
+  /* TO STRING */
+
+  toString(): string {
+    return this.#username + (this.#password === '' ? '' : `:${this.#password}`);
+  }
+}
